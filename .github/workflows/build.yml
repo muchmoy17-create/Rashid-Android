@@ -1,0 +1,52 @@
+name: Build Rasheed APK
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v3
+      - name: Create Full Project
+        run: |
+          echo "include ':app'" > settings.gradle
+          echo "buildscript{repositories{google();mavenCentral()} dependencies{classpath 'com.android.tools.build:gradle:8.2.2'}} allprojects{repositories{google();mavenCentral()}}" > build.gradle
+          mkdir -p app/src/main/java/com/rasheed/store app/src/main/res/layout app/src/main/res/values gradle/wrapper
+          echo "distributionUrl=https\://services.gradle.org/distributions/gradle-8.6-bin.zip" > gradle/wrapper/gradle-wrapper.properties
+          cat > app/build.gradle <<'E'
+          plugins{id 'com.android.application'}
+          android{namespace 'com.rasheed.store';compileSdk 34;defaultConfig{applicationId "com.rasheed.store";minSdk 24;targetSdk 34;versionCode 1;versionName "1.0"};buildTypes{release{minifyEnabled false}};compileOptions{sourceCompatibility JavaVersion.VERSION_1_8;targetCompatibility JavaVersion.VERSION_1_8}}
+          dependencies{implementation 'androidx.appcompat:appcompat:1.6.1';implementation 'com.google.android.material:material:1.11.0';implementation 'androidx.recyclerview:recyclerview:1.3.2'}
+          E
+          cat > app/src/main/AndroidManifest.xml <<'E'
+          <manifest xmlns:android="http://schemas.android.com/apk/res/android"><application android:label="متجر رشيد" android:theme="@android:style/Theme.Light"><activity android:name=".MainActivity" android:exported="true"><intent-filter><action android:name="android.intent.action.MAIN"/><category android:name="android.intent.category.LAUNCHER"/></intent-filter></activity></application></manifest>
+          E
+          echo '<resources><string name="app_name">متجر رشيد</string></resources>' > app/src/main/res/values/strings.xml
+          cat > app/src/main/res/layout/activity_main.xml <<'E'
+          <?xml version="1.0" encoding="utf-8"?>
+          <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android" android:orientation="vertical" android:layout_width="match_parent" android:layout_height="match_parent" android:padding="16dp">
+          <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="متجر رشيد - مشروع التخرج" android:textSize="22sp" android:textStyle="bold" android:gravity="center" android:textColor="#0A7A42" android:padding="12dp"/>
+          <Button android:layout_width="match_parent" android:layout_height="wrap_content" android:text="مرحبا بك في متجر رشيد - الاصدار 1.0" android:backgroundTint="#0A7A42"/>
+          <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="المنتجات: لابتوب - جوال - سماعات - شاحن - حقيبة" android:paddingTop="20dp" android:textSize="16sp"/>
+          </LinearLayout>
+          E
+          cat > app/src/main/java/com/rasheed/store/MainActivity.java <<'E'
+          package com.rasheed.store;import android.os.Bundle;import androidx.appcompat.app.AppCompatActivity;public class MainActivity extends AppCompatActivity{protected void onCreate(Bundle b){super.onCreate(b);setContentView(R.layout.activity_main);}}
+          E
+      - name: Build APK
+        run: gradle assembleDebug
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: Rasheed-APK
+          path: app/build/outputs/apk/debug/*.apk
