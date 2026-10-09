@@ -1,22 +1,233 @@
-name: Build Rasheed APK
-on:
-  push:
-    branches: [main]
-jobs:
-  build:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - name: Setup Java
-        uses: actions/setup-java@v4
-        with:
-          java-version: '17'
-          distribution: 'temurin'
-      - name: Make gradlew executable
-        run: chmod +x gradlew
-    
-      - name: Upload APK
-        uses: actions/upload-artifact@v4
-        with:
-          name: Rasheed-APK
-          path: app/build/outputs/apk/debug/app-debug.apk
+import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
+import 'dart:io';
+
+void main() {
+  runApp(const RashidAgriculturalApp());
+}
+
+class RashidAgriculturalApp extends StatelessWidget {
+  const RashidAgriculturalApp({Key? key}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      debugShowCheckedModeBanner: false,
+      title: 'رشيد - المساعد الزراعي',
+      theme: ThemeData(
+        primarySwatch: Colors.green,
+        scaffoldBackgroundColor: const Color(0xFFF4F9F4),
+      ),
+      home: const RashidHomePage(),
+    );
+  }
+}
+
+class RashidHomePage extends StatefulWidget {
+  const RashidHomePage({Key? key}) : super(key: key);
+
+  @override
+  _RashidHomePageState createState() => _RashidHomePageState();
+}
+
+class _RashidHomePageState extends State<RashidHomePage> {
+  File? _selectedImage;
+  final TextEditingController _questionController = TextEditingController();
+  final ImagePicker _picker = ImagePicker();
+
+  // دالة اختيار الصورة من المعرض
+  Future<void> _pickImage() async {
+    final XFile? image = await _picker.pickImage(source: ImageSource.gallery);
+    if (image != null) {
+      setState(() {
+        _selectedImage = File(image.path);
+      });
+      // هنا يمكنك لاحقاً ربط إرسال الصورة لنموذج الذكاء الاصطناعي (API)
+    }
+  }
+
+  // دالة إرسال السؤال النصي
+  void _askRashid() {
+    String question = _questionController.text;
+    if (question.isNotEmpty) {
+      // هنا يمكنك لاحقاً إرسال السؤال إلى واجهة برمجة تطبيقات الذكاء الاصطناعي (مثل Gemini API)
+      ScaffoldMessenger.decodeMessage(
+        context,
+        const SnackBar(content: Text('جارٍ إرسال السؤال إلى رشيد...')),
+      );
+      _questionController.clear();
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('رشيد - المساعد الزراعي'),
+        centerTitle: true,
+        backgroundColor: Colors.green[700],
+      ),
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            // بطاقة رأس التطبيق (الهيدر الأخضر)
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Colors.green[800],
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: const Column(
+                children: [
+                  Text(
+                    '🌱 رشيد - المساعد الزراعي',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                  SizedBox(height: 6),
+                  Text(
+                    'مختار محمد أحمد خالد',
+                    style: TextStyle(
+                      color: Colors.white70,
+                      fontSize: 14,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 20),
+
+            // قسم تشخيص الورقة
+            Card(
+              elevation: 3,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      '📷 تشخيص الورقة',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    Row(
+                      children: [
+                        ElevatedButton.icon(
+                          onPressed: _pickImage,
+                          icon: const Icon(Icons.folder_open),
+                          label: const Text('اختيار ملف'),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.grey[200],
+                            foregroundColor: Colors.black87,
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Text(
+                            _selectedImage == null
+                                ? 'لم يتم اختيار أي ملف'
+                                : 'تم اختيار صورة الورقة',
+                            style: const TextStyle(
+                              color: Colors.grey,
+                              fontSize: 13,
+                            ),
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                      ],
+                    ),
+                    if (_selectedImage != null) ...[
+                      const SizedBox(height: 12),
+                      ClipRRect(
+                        borderRadius: BorderRadius.circular(8),
+                        child: Image.file(
+                          _selectedImage!,
+                          height: 120,
+                          width: double.infinity,
+                          fit: BoxFit.cover,
+                        ),
+                      ),
+                    ]
+                  ],
+                ),
+              ),
+            ),
+            const SizedBox(height: 20),
+
+            // قسم اسأل رشيد باليمني
+            Card(
+              elevation: 3,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      '💬 اسأل رشيد باليمني',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    TextField(
+                      controller: _questionController,
+                      decoration: InputDecoration(
+                        hintText: 'مثال: أوراق الطماطم تصفار بسبّة إيش؟',
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 12,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton(
+                        onPressed: _askRashid,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.green[700],
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                        ),
+                        child: const Text(
+                          'اسأل',
+                          style: TextStyle(
+                            fontSize: 16,
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
