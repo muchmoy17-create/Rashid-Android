@@ -1,36 +1,39 @@
-name: Build Rasheed APK
+name: Build Rasheed APK V2.1 Fixed
 
 on:
-  workflow_dispatch:
   push:
-    branches:
-      - main
+    branches: [ main, رئيسي ]
 
 jobs:
   build:
     runs-on: ubuntu-latest
-
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-
-      - name: Setup Java
+      
+      - name: Set up JDK 17
         uses: actions/setup-java@v4
         with:
-          distribution: temurin
           java-version: '17'
+          distribution: 'temurin'
+          
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3.0.1
+        with:
+          api-level: 34
+          build-tools: 34.0.0
 
-      - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@v4
+      - name: Fix gradlew permission
+        run: chmod +x gradlew || echo "skip"
 
-      - name: Make gradlew executable
-        run: chmod +x gradlew
+      - name: Create Full Project
+        run: echo "Rasheed V2.1 713580321"
 
       - name: Build APK
-        run: ./gradlew assembleDebug
+        run: ./gradlew assembleDebug --stacktrace
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: Rasheed-APK
+          name: Rasheed-V2.1-Fixed-713580321
           path: app/build/outputs/apk/debug/*.apk
